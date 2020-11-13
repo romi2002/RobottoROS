@@ -1,0 +1,12 @@
+<launch>
+    <node name="TeensyComms" pkg="rosserial_python" type="serial_node.py">
+        <param name="port" value="/dev/ttyTHS1"/>
+        <param name="baud" value="2500000"/>
+    </node>
+
+    <node pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 1 0 0 0 base_link laser 100" />
+
+    <node pkg="tf" type="static_transform_publisher" name="map_tf_broadcaster" args="0 0 0 0 0 0 map odom 100" />
+
+    <node pkg="robotto_odom" type="tf_broadcaster" name="odom_broadcaster"/>
+</launch>

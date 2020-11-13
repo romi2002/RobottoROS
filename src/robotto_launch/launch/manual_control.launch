@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="joy" type="joy_node" name="joy_node">
+        <param name="deadzone" value="0.1"/>
+        <param name="autorepeat_rate" value="60"/>
+    </node>
+
+    <node pkg="robotto_manual_control" type="robotto_manual_control_node" name="manual_control"/>
+</launch>
