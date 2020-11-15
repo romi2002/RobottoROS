@@ -6,9 +6,9 @@ static ros::Publisher twistPub;
 
 void joyCb(const sensor_msgs::JoyConstPtr &joy){
     geometry_msgs::Twist twist;
-    twist.linear.x = joy->axes[1];
-    twist.linear.y = joy->axes[0];
-    twist.angular.z = joy->axes[3] * M_PI;
+    twist.linear.x = joy->axes[4];
+    twist.linear.y = joy->axes[3];
+    twist.angular.z = joy->axes[0] * M_PI;
 
     twistPub.publish(twist);
 }
