@@ -15,8 +15,22 @@ void odomCallback(const geometry_msgs::PoseConstPtr & msg){
     quat.setZ(msg->orientation.z);
     quat.setW(msg->orientation.w);
 
+    tf::Matrix3x3 m(quat);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    tf::Quaternion stab_quat = tf::createQuaternionFromRPY(0, 0, yaw);
+
+    tf::Vector3 footVec;
+    footVec.setZ(0);
+
     tf::StampedTransform trans(tf::Transform(quat, vec), ros::Time::now(), "odom", "base_link");
+    tf::StampedTransform transStab(tf::Transform(stab_quat, vec), ros::Time::now(), "odom", "base_stabilized");
+    tf::StampedTransform transFoot(tf::Transform(stab_quat, footVec), ros::Time::now(), "odom", "base_footprint");
+
     odom_broadcaster.sendTransform(trans);
+    odom_broadcaster.sendTransform(transStab);
+    odom_broadcaster.sendTransform(transFoot)
 }
 
 int main(int argc, char** argv){

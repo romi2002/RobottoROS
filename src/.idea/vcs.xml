@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
     <mapping directory="$PROJECT_DIR$/rosserial" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rplidar_ros" vcs="Git" />
   </component>
 </project>

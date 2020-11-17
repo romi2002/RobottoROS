@@ -185,6 +185,9 @@ include_directories(
 install(FILES
     launch/main.launch
     launch/main_remote.launch
+    launch/main_manual_control.launch
+    launch/manual_control.launch
+    launch/gmapping.launch
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
