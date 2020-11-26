@@ -188,6 +188,7 @@ install(FILES
     launch/main_manual_control.launch
     launch/manual_control.launch
     launch/gmapping.launch
+        launch/main_hectorSLAM.launch
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

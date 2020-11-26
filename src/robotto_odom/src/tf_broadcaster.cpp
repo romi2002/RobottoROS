@@ -30,7 +30,7 @@ void odomCallback(const geometry_msgs::PoseConstPtr & msg){
 
     odom_broadcaster.sendTransform(trans);
     odom_broadcaster.sendTransform(transStab);
-    odom_broadcaster.sendTransform(transFoot)
+    odom_broadcaster.sendTransform(transFoot);
 }
 
 int main(int argc, char** argv){
