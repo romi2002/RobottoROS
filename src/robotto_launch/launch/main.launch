@@ -1,6 +1,12 @@
 <launch>
-    <node name="TeensyComms" pkg="rosserial_python" type="serial_node.py" output="screen">
+    <node name="TeensyCOBSEncoder" pkg="robotto_cobs_encoder" type="robotto_cobs_encoder_node" output="screen">
         <param name="port" value="/dev/teensy"/>
+        <param name="baud" value="1000000"/>
+        <param name="virtPort" value="/tmp/pty_port"/>
+    </node>
+
+    <node name="TeensyComms" pkg="rosserial_python" type="serial_node.py" output="screen">
+        <param name="port" value="/tmp/pty_port"/>
         <param name="baud" value="2000000"/>
     </node>
 
@@ -18,6 +24,6 @@
         <param name="angle_compensate"    type="bool"   value="true"/>
     </node>
 
-    <include file="$(find robotto_launch)/gmapping.launch"/>
+    <include file="$(find robotto_launch)/launch/gmapping.launch"/>
 
 </launch>
