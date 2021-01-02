@@ -10,6 +10,7 @@ static ros::Publisher twistPub;
 bool lastResetYaw = false;
 double latestYaw = 0;
 double zeroAngle = 0;
+bool useFieldOriented = false;
 
 double wrapAngle(double angle) {
     angle = std::copysign(std::fmod(angle, 2 * M_PI), angle);
@@ -25,7 +26,7 @@ void joyCb(const sensor_msgs::JoyConstPtr &joy){
     geometry_msgs::Twist twist;
     twist.linear.x = joy->axes[4];
     twist.linear.y = joy->axes[3];
-    twist.angular.z = joy->axes[0] * M_PI;
+    twist.angular.z = joy->axes[0] * M_PI * 2;
     bool yawButton = joy->buttons[0];
 
     double yaw = latestYaw;
@@ -36,9 +37,11 @@ void joyCb(const sensor_msgs::JoyConstPtr &joy){
 
     yaw = wrapAngle(yaw - zeroAngle);
 
-    double temp = twist.linear.x * std::cos(yaw) + twist.linear.y * std::sin(yaw);
-    //twist.linear.y = -twist.linear.x * std::sin(yaw) + twist.linear.y * std::cos(yaw);
-    //twist.linear.x = temp;
+    if(useFieldOriented){
+        double temp = twist.linear.x * std::cos(yaw) + twist.linear.y * std::sin(yaw);
+        twist.linear.y = -twist.linear.x * std::sin(yaw) + twist.linear.y * std::cos(yaw);
+        twist.linear.x = temp;
+    }
 
     twistPub.publish(twist);
     lastResetYaw = joy->buttons[0];
@@ -55,8 +58,13 @@ void poseCb(const geometry_msgs::PoseConstPtr &msg){
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "manual_control_node");
-
     ros::NodeHandle n;
+    ros::NodeHandle nh("~");
+
+    if(nh.hasParam("enableFieldOriented")){
+        nh.getParam("enableFieldOriented", useFieldOriented);
+    }
+
     twistPub = n.advertise<geometry_msgs::Twist>("cmd_vel", 10);
     ros::Subscriber joy_sub = n.subscribe("joy", 20, joyCb);
     ros::Subscriber odom_sub = n.subscribe("pose", 20, poseCb);

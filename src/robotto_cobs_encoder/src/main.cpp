@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <sys/epoll.h>
 #include "ros/ros.h"
+#include "crc16/crc16.h"
 
 static constexpr size_t BUFFER_LEN = 1024;
 static constexpr bool printData = false;
@@ -126,8 +127,8 @@ int openSerialPort(const std::string &serialPort, speed_t baudRate) {
         return -1;
     }
 
-    //tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
-    tty.c_cflag |= PARENB;
+    tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
+    //tty.c_cflag |= PARENB;
     tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
     tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size
     tty.c_cflag |= CS8; // 8 bits per byte (most common)
@@ -222,34 +223,34 @@ int main(int argc, char **argv) {
         return errno;
     }
 
-    int baudRate;
-    while(!nh.getParam("baud", baudRate)){
+    int rosBaudRate;
+    while (!nh.getParam("baud", rosBaudRate)) {
         ROS_WARN("Needs a baudrate!");
     }
-    baudRate = get_baud(baudRate);
-    if(baudRate == -1){
+    int baudRate = get_baud(rosBaudRate);
+    if (baudRate == -1) {
         ROS_ERROR("Invalid baudrate!");
         return -1;
     }
 
     std::string port;
-    while(!nh.getParam("port", port)){
+    while (!nh.getParam("port", port)) {
         ROS_WARN("Needs a serial port!");
     }
 
-    if(access(port.c_str(), F_OK) != 0){
+    if (access(port.c_str(), F_OK) != 0) {
         ROS_ERROR("Serial port does not exist!");
         return -1;
     }
 
     std::string portSymlink = "/tmp/virtPort";
-    if(!nh.getParam("virtPort", portSymlink)){
+    if (!nh.getParam("virtPort", portSymlink)) {
         ROS_WARN("Defaulting virtPort to: %s", portSymlink.c_str());
     }
 
-    if(access(portSymlink.c_str(), F_OK) == 0){
+    if (access(portSymlink.c_str(), F_OK) == 0) {
         //File exists, delete
-        while(unlink(portSymlink.c_str()) != 0){
+        while (unlink(portSymlink.c_str()) != 0) {
             ROS_WARN("Could not delete symlink with errno %d, retrying...", errno);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
@@ -257,7 +258,7 @@ int main(int argc, char **argv) {
         ROS_INFO("Port symlink: %s deleted!", portSymlink.c_str());
     }
 
-    while(symlink(slaveName.c_str(), portSymlink.c_str()) != 0){
+    while (symlink(slaveName.c_str(), portSymlink.c_str()) != 0) {
         ROS_WARN("Could not create symlink with errno %d, retrying...", errno);
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -273,7 +274,7 @@ int main(int argc, char **argv) {
 
         serialFd = openSerialPort(port, baudRate);
     }
-    ROS_INFO("Serial port %s opened!", port.c_str());
+    ROS_INFO("Serial port %s opened at %d baud!", port.c_str(), rosBaudRate);
     //std::cout << "Serial port opened!" << std::endl;
 
     uint8_t ptyBuffer[BUFFER_LEN];
@@ -290,7 +291,11 @@ int main(int argc, char **argv) {
     uint8_t decodeBuffer[BUFFER_LEN];
     memset(decodeBuffer, 0, sizeof(decodeBuffer));
 
-    fcntl(masterFd, F_SETFL, FNDELAY);
+    if (fcntl(masterFd, F_SETFL, (fcntl(masterFd, F_GETFL) &
+                                  ~O_NONBLOCK)) == -1) {
+        ROS_ERROR("Failed fcntl() for master with errno: %d", errno);
+        return -1;
+    };
 
     int epfd;
     struct epoll_event ev;
@@ -362,18 +367,33 @@ int main(int argc, char **argv) {
                                 ROS_ERROR("Error decoding serial data! Error: %d", decRes.status);
                                 //std::cout << "Error decoding serial data: " << decRes.status << std::endl;
                                 //std::cout << "Input size: " << n << std::endl;
-                            } else {
+                            } else if (decRes.out_len >= 4) {
                                 if (printData) {
                                     std::cout << "Decoded data: " << std::endl;
                                     print_hexdump(reinterpret_cast<void **>(decodeBuffer), decRes.out_len);
                                 }
 
-                                //Send decoded buffer to pty
-                                ret = write(masterFd, decodeBuffer, decRes.out_len);
-                                if (ret != decRes.out_len) {
-                                    ROS_ERROR("Error writing to pty! Errno: %d", errno);
-                                    //std::cout << "Error writing to pty, only wrote: " << ret << std::endl;
-                                    //std::cout << "Errno: " << errno << std::endl;
+                                uint16_t size, crc;
+                                size = decodeBuffer[0];
+                                size |= decodeBuffer[1] << 8;
+                                crc = decodeBuffer[decRes.out_len - 2];
+                                crc |= decodeBuffer[decRes.out_len - 1] << 8;
+
+                                auto dataCRC = crc16_ccitt(decodeBuffer, decRes.out_len - 2);
+                                if (dataCRC != crc) {
+                                    ROS_WARN("Checksum verification failed! Orig: %d Calculated: %d", dataCRC, crc);
+                                } else if (size != decRes.out_len - 4) {
+                                    ROS_WARN("Size received different from size inside packet! Orig: %ld Recev: %d",
+                                              decRes.out_len - 4, size);
+                                } else {
+                                    //Do not send size or crc16 sum
+                                    //Send decoded buffer to pty
+                                    ret = write(masterFd, decodeBuffer + 2, decRes.out_len - 4);
+                                    if (ret != decRes.out_len - 4) {
+                                        ROS_ERROR("Error writing to  return code: %d! Errno: %d Length: %ld",ret, errno, decRes.out_len - 4);
+                                        //std::cout << "Error writing to pty, only wrote: " << ret << std::endl;
+                                        //std::cout << "Errno: " << errno << std::endl;
+                                    }
                                 }
                             }
 

@@ -1,17 +1,18 @@
 <launch>
     <node name="TeensyCOBSEncoder" pkg="robotto_cobs_encoder" type="robotto_cobs_encoder_node" output="screen">
         <param name="port" value="/dev/teensy"/>
-        <param name="baud" value="1000000"/>
+        <param name="baud" value="230400"/>
         <param name="virtPort" value="/tmp/pty_port"/>
     </node>
 
     <node name="TeensyComms" pkg="rosserial_python" type="serial_node.py" output="screen">
         <param name="port" value="/tmp/pty_port"/>
-        <param name="baud" value="2000000"/>
+        <param name="baud" value="1000000"/>
     </node>
 
     <node pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 1 0 0 0 base_link laser 100" />
     <node pkg="tf" type="static_transform_publisher" name="laser_link_tf_broadcaster" args="0 0 1 0 0 0 base_link laser_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_map" args="0 0 1 0 0 0 base_link map 100" />
 
     <node pkg="robotto_odom" type="tf_broadcaster" name="odom_broadcaster"/>
 
@@ -23,7 +24,4 @@
         <param name="inverted"            type="bool"   value="false"/>
         <param name="angle_compensate"    type="bool"   value="true"/>
     </node>
-
-    <include file="$(find robotto_launch)/launch/gmapping.launch"/>
-
 </launch>
