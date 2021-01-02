@@ -13,7 +13,7 @@
 #include "ros/ros.h"
 #include "crc16/crc16.h"
 
-static constexpr size_t BUFFER_LEN = 1024;
+static constexpr size_t BUFFER_LEN = 1024 * 8;
 static constexpr bool printData = false;
 
 void print_hexdump(void *arr[], size_t len) {
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
                                 //std::cout << "Error decoding serial data: " << decRes.status << std::endl;
                                 //std::cout << "Input size: " << n << std::endl;
                             } else if (decRes.out_len >= 4) {
-                                if (printData) {
+                                if (true) {
                                     std::cout << "Decoded data: " << std::endl;
                                     print_hexdump(reinterpret_cast<void **>(decodeBuffer), decRes.out_len);
                                 }
@@ -382,6 +382,7 @@ int main(int argc, char **argv) {
                                 auto dataCRC = crc16_ccitt(decodeBuffer, decRes.out_len - 2);
                                 if (dataCRC != crc) {
                                     ROS_WARN("Checksum verification failed! Orig: %d Calculated: %d", dataCRC, crc);
+                                    ROS_WARN("Recev size: %d, actual size: %ld", size - 2, decRes.out_len);
                                 } else if (size != decRes.out_len - 4) {
                                     ROS_WARN("Size received different from size inside packet! Orig: %ld Recev: %d",
                                               decRes.out_len - 4, size);
