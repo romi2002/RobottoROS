@@ -10,7 +10,7 @@
     <!-- Process 1 out of every this many scans (set it to a higher number to skip more scans)  -->
     <param name="throttle_scans" value="1"/>
 
-    <param name="map_update_interval" value="2.5"/> <!-- default: 5.0 -->
+    <param name="map_update_interval" value="5.5"/> <!-- default: 5.0 -->
 
     <!-- The maximum usable range of the laser. A beam is cropped to this value.  -->
     <param name="maxUrange" value="5.0"/>
@@ -29,16 +29,16 @@
     <!-- Number of beams to skip in each scan. -->
     <param name="lskip" value="0"/>
 
-    <param name="srr" value="0.01"/>
-    <param name="srt" value="0.02"/>
-    <param name="str" value="0.01"/>
-    <param name="stt" value="0.02"/>
+    <param name="srr" value="0.11"/>
+    <param name="srt" value="0.12"/>
+    <param name="str" value="0.11"/>
+    <param name="stt" value="0.22"/>
 
     <!-- Process a scan each time the robot translates this far  -->
-    <param name="linearUpdate" value="0.05"/>
+    <param name="linearUpdate" value="0.01"/>
 
     <!-- Process a scan each time the robot rotates this far  -->
-    <param name="angularUpdate" value="0.05"/>
+    <param name="angularUpdate" value="0.025"/>
 
     <param name="temporalUpdate" value="-1.0"/>
     <param name="resampleThreshold" value="0.5"/>
