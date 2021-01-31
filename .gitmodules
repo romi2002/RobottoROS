@@ -4,3 +4,9 @@
 [submodule "src/rplidar_ros"]
 	path = src/rplidar_ros
 	url = https://github.com/robopeak/rplidar_ros.git
+[submodule "src/cartographer"]
+	path = src/cartographer
+	url = https://github.com/cartographer-project/cartographer.git
+[submodule "src/cartographer_ros"]
+	path = src/cartographer_ros
+	url = https://github.com/cartographer-project/cartographer_ros.git

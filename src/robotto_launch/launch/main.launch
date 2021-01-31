@@ -1,19 +1,11 @@
 <launch>
-    <node name="TeensyCOBSEncoder" pkg="robotto_cobs_encoder" type="robotto_cobs_encoder_node" output="screen">
-        <param name="port" value="/dev/teensy"/>
-        <param name="baud" value="1000000"/>
-        <param name="virtPort" value="/tmp/pty_port"/>
-    </node>
-
-    <node name="TeensyComms" pkg="rosserial_python" type="serial_node.py" output="screen">
-        <param name="port" value="/tmp/pty_port"/>
-        <param name="baud" value="2000000"/>
+    <node name="TeensyTCPComms" pkg="robotto_tcp_comms" type="robotto_tcp_comms_node" output="screen">
+        <param name="server_ip" value="10.0.0.3"/>
+        <param name="server_port" value="80"/>
     </node>
 
     <node pkg="tf" type="static_transform_publisher" name="laser_tf_broadcaster" args="0 0 1 0 0 0 base_link laser 100" />
     <node pkg="tf" type="static_transform_publisher" name="laser_link_tf_broadcaster" args="0 0 1 0 0 0 base_link laser_link 100" />
-
-    <node pkg="robotto_odom" type="tf_broadcaster" name="odom_broadcaster"/>
 
     <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
         <param name="serial_port"         type="string" value="/dev/lidar"/>
@@ -25,6 +17,5 @@
         <param name="angle_compensate"    type="bool"   value="true"/>
     </node>
 
-    <include file="$(find robotto_launch)/launch/gmapping.launch"/>
-
+<!--    <include file="$(find robotto_launch)/launch/gmapping.launch"/>-->
 </launch>
