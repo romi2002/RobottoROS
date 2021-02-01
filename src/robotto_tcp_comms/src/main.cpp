@@ -53,7 +53,7 @@ void getData(const json &j){
     /**
      * Tf Broadcast
      */
-     static tf::TransformBroadcaster odom_broadcaster;
+    static tf::TransformBroadcaster odom_broadcaster;
     tf::Vector3 vec;
     vec.setX(pose.position.x);
     vec.setY(pose.position.y);
@@ -222,7 +222,7 @@ int main(int argc, char**argv) {
                 auto res = cobs_encode(cobsEncodeBuffer, sizeof(cobsEncodeBuffer), data.data(), data.size());
                 if (res.status == COBS_ENCODE_OK) {
                     cobsEncodeBuffer[res.out_len++] = 0x00;
-                    int ret = write(sock, cobsEncodeBuffer, res.out_len);
+                    write(sock, cobsEncodeBuffer, res.out_len);
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(20));

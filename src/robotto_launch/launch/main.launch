@@ -8,7 +8,7 @@
     <node pkg="tf" type="static_transform_publisher" name="laser_link_tf_broadcaster" args="0 0 1 0 0 0 base_link laser_link 100" />
 
     <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
-        <param name="serial_port"         type="string" value="/dev/lidar"/>
+        <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
         <param name="scan_mode"         type="string" value="Express"/>
         <param name="serial_baudrate"     type="int"    value="115200"/><!--A1/A2 -->
         <!--param name="serial_baudrate"     type="int"    value="256000"--><!--A3 -->
@@ -17,5 +17,5 @@
         <param name="angle_compensate"    type="bool"   value="true"/>
     </node>
 
-<!--    <include file="$(find robotto_launch)/launch/gmapping.launch"/>-->
+    <include file="$(find robotto_launch)/launch/gmapping.launch"/>
 </launch>
