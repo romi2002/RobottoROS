@@ -10,3 +10,6 @@
 [submodule "src/cartographer_ros"]
 	path = src/cartographer_ros
 	url = https://github.com/cartographer-project/cartographer_ros.git
+[submodule "src/jetson_camera"]
+	path = src/jetson_camera
+	url = https://github.com/sfalexrog/jetson_camera.git

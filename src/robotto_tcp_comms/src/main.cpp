@@ -15,12 +15,13 @@
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
+#include <std_msgs/Float32.h>
 
 #include <tf/transform_broadcaster.h>
 
 using json = nlohmann::json;
 
-ros::Publisher posePub, jointStatePub, imuPub;
+ros::Publisher posePub, jointStatePub, imuPub, rawKinemPub, batteryVoltagePub;
 geometry_msgs::Twist cmd_vel;
 
 void twistCallback(const geometry_msgs::TwistConstPtr &msg){
@@ -48,7 +49,11 @@ void getData(const json &j){
     pose.orientation.z = j["imu_quat"]["z"];
     pose.orientation.w = j["imu_quat"]["w"];
 
-    posePub.publish(pose);
+    geometry_msgs::PoseStamped poseStamped;
+    poseStamped.pose = pose;
+    poseStamped.header.stamp = ros::Time::now();
+
+    posePub.publish(poseStamped);
 
     /**
      * Tf Broadcast
@@ -92,9 +97,15 @@ void getData(const json &j){
 
     imu.orientation = pose.orientation;
 
-    //TODO
-    //imu.angular_velocity = angVel;
-    //imu.linear_acceleration = accel;
+    imu.linear_acceleration.x = j["imu_accel"]["dx"];
+    imu.linear_acceleration.y = j["imu_accel"]["dy"];
+    imu.linear_acceleration.z = j["imu_accel"]["dtheta"];
+
+    imu.angular_velocity.x = j["imu_angular"]["dx"];
+    imu.angular_velocity.y = j["imu_angular"]["dy"];
+    imu.angular_velocity.z = j["imu_angular"]["dtheta"];
+
+    imu.header.stamp = ros::Time::now();
     imuPub.publish(imu);
 
     /**
@@ -122,7 +133,21 @@ void getData(const json &j){
             j["wheel_effort"]["backRight"]
     };
 
+    jointState.header.stamp = ros::Time::now();
     jointStatePub.publish(jointState);
+
+    /**
+     * Raw kinematics publish
+     */
+    geometry_msgs::Twist rawKinemTwist;
+    rawKinemTwist.linear.x = j["raw_kinematics"]["dx"];
+    rawKinemTwist.linear.y = j["raw_kinematics"]["dy"];
+    rawKinemTwist.angular.z = j["raw_kinematics"]["dtheta"];
+    rawKinemPub.publish(rawKinemTwist);
+
+    std_msgs::Float32 voltage;
+    voltage.data = j["battery_voltage"];
+    batteryVoltagePub.publish(voltage);
 }
 
 int main(int argc, char**argv) {
@@ -133,6 +158,10 @@ int main(int argc, char**argv) {
     posePub = n.advertise<geometry_msgs::Pose>("pose", 10);
     jointStatePub = n.advertise<sensor_msgs::JointState>("joint_state", 10);
     imuPub = n.advertise<sensor_msgs::Imu>("imu", 10);
+
+    rawKinemPub = n.advertise<geometry_msgs::Twist>("raw_kinematics", 10);
+
+    batteryVoltagePub = n.advertise<std_msgs::Float32>("battery_voltage", 10);
 
     ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 20, twistCallback);
 
